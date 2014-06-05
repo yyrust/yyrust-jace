@@ -174,7 +174,7 @@ std::string toUTF8(const wstring& src)
  */
 wstring fromUTF8(const string& src)
 {
-	char ch;
+	unsigned char ch;
 	size_t count;
 	char t1, t2; // trail bytes
 	std::wstring result;
@@ -184,10 +184,10 @@ wstring fromUTF8(const string& src)
 	while (i != src.end())
 	{
 		count = result.length();
-		if (*i <= 0x7f)
+		if ((unsigned char)*i <= 0x7f)
 		{
 			// fast ASCII loop
-			while (i != src.end() && *i <= 0x7f)
+			while (i != src.end() && (unsigned char)*i <= 0x7f)
 			{
 				result += (char) *i;
 				++i;
@@ -243,7 +243,7 @@ wstring fromUTF8(const string& src)
 						continue;
 					}
 				}
-				throw string("Invalid char found: ") + ch;
+				throw string("Invalid char found: ") + (char)ch;
 			}
 		}
 		while (--count > 0);
@@ -286,7 +286,7 @@ wstring fromUTF8(const string& src)
 					continue;
 				}
 			}
-			throw string("Invalid char found: ") + ch;
+			throw string("Invalid char found: ") + (char)ch;
 		}
 	}
 
@@ -319,7 +319,7 @@ wstring fromUTF8(const string& src)
 					continue;
 				}
 			}
-			throw string("Invalid char found: ") + ch;
+			throw string("Invalid char found: ") + (char)ch;
 		}
 	}
 	return result;
