@@ -359,6 +359,32 @@ std::string asString(JNIEnv* env, jstring str)
 	return stdString;
 }
 
+void catchAdnDescribeAndThrow(JNIEnv* env)
+{
+    /*
+     * Uing catchAndThrow() in registerShutdownHook() may cause dead lock:
+     *
+     *  createVm() already holds jvmMutex
+     *      ...
+     *      registerShutdownHook()
+     *          an exception is thrown ->
+     *          catchAndThrow()
+     *              throwInstance()
+     *                  Constructor of throwable class
+     *                      jace::attach()
+     *                          try to acquire jvmMutex again, then dead lock happens.
+     */
+	if (!env->ExceptionCheck())
+		return;
+
+	jthrowable jexception = env->ExceptionOccurred();
+
+    if (jexception) {
+        env->ExceptionDescribe();
+        throw JNIException(string("jace::catchAdnDescribeAndThrow()\n"));
+    }
+}
+
 /**
  * Implementation of catchAndThrow() using a specific JNIEnv.
  */
@@ -530,7 +556,7 @@ void registerShutdownHook(JNIEnv *env) throw (JNIException)
 		string msg = "Assert failed: Unable to find the class, org.jace.util.ShutdownHook.";
 		try
 		{
-			catchAndThrow(env);
+			catchAdnDescribeAndThrow(env);
 		}
 		catch (std::exception& e)
 		{
@@ -547,7 +573,7 @@ void registerShutdownHook(JNIEnv *env) throw (JNIException)
 		string msg = "Assert failed: Unable to find the method, ShutdownHook.getInstance().";
 		try
 		{
-			catchAndThrow(env);
+			catchAdnDescribeAndThrow(env);
 		}
 		catch (std::exception& e)
 		{
@@ -564,7 +590,7 @@ void registerShutdownHook(JNIEnv *env) throw (JNIException)
 		string msg = "Unable to invoke ShutdownHook.getInstance()";
 		try
 		{
-			catchAndThrow(env);
+			catchAdnDescribeAndThrow(env);
 		}
 		catch (std::exception& e)
 		{
@@ -582,7 +608,7 @@ void registerShutdownHook(JNIEnv *env) throw (JNIException)
 		string msg = "Unable to find the method, ShutdownHook.registerIfNecessary().";
 		try
 		{
-			catchAndThrow(env);
+			catchAdnDescribeAndThrow(env);
 		}
 		catch (std::exception& e)
 		{
@@ -595,7 +621,7 @@ void registerShutdownHook(JNIEnv *env) throw (JNIException)
 	env->CallObjectMethodA(hookObject, hookRegisterIfNecessary, 0);
 	try
 	{
-		catchAndThrow(env);
+		catchAdnDescribeAndThrow(env);
 	}
 	catch (std::exception& e)
 	{
