@@ -1333,7 +1333,12 @@ public class ProxyGenerator
 								if (numArguments >= 2)
 								{
 									// +1 for "this" implicit argument
-									int indexOfFirstArgument = methodStack.size() - (numArguments + 1);
+                                    int indexOfFirstArgument = 0;
+                                    for (; indexOfFirstArgument < methodStack.size () && methodStack.get (indexOfFirstArgument) instanceof TypeInsnNode; ++indexOfFirstArgument);
+                                    --indexOfFirstArgument;
+
+                                    numArguments = methodStack.size () - indexOfFirstArgument - 1;
+
 									Integer ordinal = (Integer) methodStack.get(indexOfFirstArgument + 2);
 									assert (ordinal != null): "ordinal is null at " + classNode.name;
 									instructionToOrdinal.put(node, ordinal);
