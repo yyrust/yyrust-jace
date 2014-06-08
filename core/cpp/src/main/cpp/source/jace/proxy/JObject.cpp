@@ -203,4 +203,31 @@ const JClass& JObject::getJavaJniClass() const throw (JNIException)
   return staticGetJavaJniClass();
 }
 
+jmethodID JObject::getMethodID(JNIEnv *env, const ::jace::JClass& jClass, const char *name, const char *sig, bool isStatic)
+{
+    jmethodID methodID;
+    if (isStatic)
+        methodID = env->GetStaticMethodID(jClass.getClass(), name, sig);
+    else
+        methodID = env->GetMethodID(jClass.getClass(), name, sig);
+
+    if (methodID == 0)
+    {
+        std::string msg = std::string("JObject::getMethodID\n"
+                            "Unable to find method <")
+                            + name + "> with signature <" + sig + ">";
+        try
+        {
+            catchAndThrow();
+        }
+        catch (JNIException& e)
+        {
+            msg.append("\ncaused by:\n");
+            msg.append(e.what());
+        }
+        throw JNIException(msg);
+    }
+    return methodID;
+}
+
 END_NAMESPACE_2(jace, proxy)

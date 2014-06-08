@@ -163,6 +163,8 @@ protected:
 	 *   is thrown during method execution.
 	 */
 	JACE_API static jobject newObject(const ::jace::JClass& jClass, const ::jace::JArguments& arguments);
+
+	JACE_API static jmethodID getMethodID(JNIEnv *env, const ::jace::JClass& jClass, const char *name, const char *sig, bool isStatic = false);
 };
 
 

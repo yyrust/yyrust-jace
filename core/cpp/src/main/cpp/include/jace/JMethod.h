@@ -116,6 +116,48 @@ public:
 		return result;
 	}
 
+	static ResultType invoke(JNIEnv *env, const ::jace::proxy::JObject& object, jmethodID methodID, const jvalue *arguments, size_t nArguments)
+    {
+#ifdef JACE_CHECK_NULLS
+		if (object.isNull())
+			throw JNIException("[JMethod.invoke] Can not invoke an instance method on a null object.");
+#endif
+		// Call the method.
+		jobject resultRef;
+
+		if (nArguments > 0)
+			resultRef = env->CallObjectMethodA(object, methodID, arguments);
+		else
+			resultRef = env->CallObjectMethod(object, methodID);
+
+		// Catch any java exception that occured during the method call, and throw it as a C++ exception.
+		catchAndThrow();
+
+		ResultType result(resultRef);
+		deleteLocalRef(env, resultRef);
+
+		return result;
+    }
+
+	static ResultType invoke(JNIEnv *env, const JClass& jClass, jmethodID methodID, const jvalue *arguments, size_t nArguments)
+    {
+		// Call the method.
+		jobject resultRef;
+
+		if (nArguments > 0)
+			resultRef = env->CallStaticObjectMethodA(jClass.getClass(), methodID, arguments);
+		else
+			resultRef = env->CallStaticObjectMethod(jClass.getClass(), methodID);
+
+		// Catch any java exception that occured during the method call, and throw it as a C++ exception.
+		catchAndThrow();
+
+		ResultType result(resultRef);
+		deleteLocalRef(env, resultRef);
+
+		return result;
+    }
+
 protected:
 	/**
 	 * Returns the jmethodID matching the signature for the given arguments.
