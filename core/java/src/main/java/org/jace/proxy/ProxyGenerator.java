@@ -207,6 +207,7 @@ public class ProxyGenerator
 			+ newLine + "For more information, please refer to the Jace Developer's Guide.");
 
 		output.write(getInitializerValue(false) + newLine);
+		generateMethodIdArrayDefinition(output);
 		generateMethodDefinitions(output, false);
 		generateFieldDefinitions(output, false);
 		generateJaceDefinitions(output, false);
@@ -295,6 +296,7 @@ public class ProxyGenerator
 		MetaClass metaClass = MetaClassFactory.getMetaClass(classFile.getClassName()).proxy();
 		String className = metaClass.getSimpleName();
 
+        int methodIndex = -1;
 		// go through all of the methods
 		for (ClassMethod method: classFile.getMethods())
 		{
@@ -360,6 +362,8 @@ public class ProxyGenerator
 			};
 			output.write(parameterList.toString(sf, ", ") + ")");
 
+            methodIndex++;
+
 			// If this is a constructor, we need to handle it differently from other methods
 			if (isConstructor)
 			{
@@ -388,39 +392,57 @@ public class ProxyGenerator
 			{
 //        if (!accessFlagSet.contains(MethodAccessFlag.STATIC))
 //          output.write("const " + newLine);
+
+                String isStatic;
+				if (method.getAccessFlags().contains(MethodAccessFlag.STATIC))
+					isStatic = "true";
+				else
+					isStatic = "false";
+
 				output.write(newLine);
 				output.write("{" + newLine);
+				output.write("  const int METHOD_INDEX = " + methodIndex + ";" + newLine);
+				output.write("  const char *SIG = \"" + method.getDescriptor() + "\";" + newLine);
+				output.write("  const char *METHOD_NAME = \"" + method.getName() + "\";" + newLine);
+				output.write("  jmethodID methodID = methodIds[METHOD_INDEX];" + newLine);
+				output.write("  JNIEnv *env = attach();" + newLine);
+				output.write("  if (methodID == 0) {" + newLine);
+				output.write("    methodID = getMethodID(env, staticGetJavaJniClass(), METHOD_NAME, SIG, " + isStatic + ");" + newLine);
+				output.write("    methodIds[METHOD_INDEX] = methodID;" + newLine);
+				output.write("  }" + newLine);
 
 				// Initialize any arguments we have
-				output.write("  JArguments arguments;" + newLine);
+				output.write("  jvalue arguments[] = {");
 
 				if (parameterTypes.size() > 0)
 				{
-					output.write("  arguments");
 					for (int i = 0; i < parameterTypes.size(); ++i)
 					{
-						output.write(" << p" + i);
+                        if (i > 0) {
+                            output.write(", ");
+                        }
+						output.write("p" + i);
 					}
-					output.write(";" + newLine);
 				}
+                output.write("};" + newLine);
 
-				// If this is a non-void method call we need to return the result of the method call
 				output.write("  ");
 
+				// If this is a non-void method call we need to return the result of the method call
 				if (!returnType.getSimpleName().equals("JVoid"))
 					output.write("return ");
 
 				output.write("JMethod< ");
 				output.write("::" + returnType.getFullyQualifiedName("::"));
-				output.write(" >");
-				output.write("(\"" + methodName + "\").invoke(");
+				output.write(" >::invoke(env, ");
 
 				// If this method is static, we need to provide the class info, otherwise we provide a reference to itself.
 				if (method.getAccessFlags().contains(MethodAccessFlag.STATIC))
 					output.write("staticGetJavaJniClass()");
 				else
 					output.write("*this");
-				output.write(", arguments);" + newLine);
+				output.write(", methodID, arguments");
+				output.write(", " + parameterTypes.size() + ");" + newLine);
 			}
 			output.write("}" + newLine);
 			output.write(newLine);
@@ -1472,6 +1494,20 @@ public class ProxyGenerator
 
 		output.write(";" + newLine);
 	}
+
+	/**
+	 * Generates the method id array definition.
+	 *
+	 * @param output the output writer
+	 * @throws IOException if an error occurs while writing
+	 */
+	private void generateMethodIdArrayDefinition(Writer output) throws IOException
+    {
+        int methodCount = classFile.getMethods().size();
+        if (methodCount > 0) {
+            output.write("static jmethodID methodIds[" + methodCount + "] = {0}; " + newLine);
+        }
+    }
 
 	/**
 	 * Generates the method declarations.
