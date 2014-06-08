@@ -188,6 +188,19 @@ jobject JObject::newObject(const JClass& jClass, const JArguments& arguments)
   return JConstructor(jClass).invoke(arguments);
 }
 
+jobject JObject::newObject(JNIEnv* env, const ::jace::JClass& jClass, jmethodID methodID, const jvalue* arguments, size_t nArguments)
+{
+    jobject result;
+	if (nArguments > 0)
+		result = env->NewObjectA(jClass.getClass(), methodID, arguments);
+	else
+		result = env->NewObject(jClass.getClass(), methodID);
+
+  catchAndThrow();
+
+  return result;
+}
+
 static boost::mutex javaClassMutex;
 const JClass& JObject::staticGetJavaJniClass() throw (JNIException)
 {

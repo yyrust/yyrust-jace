@@ -164,6 +164,18 @@ protected:
 	 */
 	JACE_API static jobject newObject(const ::jace::JClass& jClass, const ::jace::JArguments& arguments);
 
+	/**
+	 * Constructs a new instance of the given class
+	 * with the given arguments.
+	 *
+	 * @return the JNI jobject representing the new object.
+	 *
+	 * @throws JNIException if a JNI error occurs while trying to locate the method.
+	 * @throws the corresponding C++ proxy exception, if a java exception
+	 *   is thrown during method execution.
+	 */
+	JACE_API static jobject newObject(JNIEnv *env, const ::jace::JClass& jClass, jmethodID methodID, const jvalue* arguments, size_t nArguments);
+
 	JACE_API static jmethodID getMethodID(JNIEnv *env, const ::jace::JClass& jClass, const char *name, const char *sig, bool isStatic = false);
 };
 
