@@ -367,24 +367,38 @@ public class ProxyGenerator
 			// If this is a constructor, we need to handle it differently from other methods
 			if (isConstructor)
 			{
+				output.write(newLine);
 				output.write("{" + newLine);
+				output.write("  const int METHOD_INDEX = " + methodIndex + ";" + newLine);
+				output.write("  const char *SIG = \"" + method.getDescriptor() + "\";" + newLine);
+				output.write("  const char *METHOD_NAME = \"<init>\";" + newLine);
+				output.write("  jmethodID methodID = methodIds[METHOD_INDEX];" + newLine);
+				output.write("  JNIEnv *env = attach();" + newLine);
+				output.write("  if (methodID == 0) {" + newLine);
+				output.write("    methodID = getMethodID(env, staticGetJavaJniClass(), METHOD_NAME, SIG, false);" + newLine);
+				output.write("    methodIds[METHOD_INDEX] = methodID;" + newLine);
+				output.write("  }" + newLine);
 
-				// initialize any arguments we have
-				output.write("  JArguments arguments;" + newLine);
+				// Initialize any arguments we have
+				output.write("  jvalue arguments[] = {");
 
 				if (parameterTypes.size() > 0)
 				{
-					output.write("  arguments");
 					for (int i = 0; i < parameterTypes.size(); ++i)
-						output.write(" << p" + i);
-					output.write(";" + newLine);
+					{
+                        if (i > 0) {
+                            output.write(", ");
+                        }
+						output.write("p" + i);
+					}
 				}
+                output.write("};" + newLine);
 
 				// set the jni object for this c++ object to the result of the call to newObject
-				output.write("  jobject localRef = newObject(" + className
-										 + "::staticGetJavaJniClass(), arguments);" + newLine);
+				output.write("  jobject localRef = newObject(env, " + className
+										 + "::staticGetJavaJniClass(), methodID, arguments, "
+                                         + parameterTypes.size() + ");" + newLine);
 				output.write("  " + className + " result = " + className + "(localRef);" + newLine);
-				output.write("  JNIEnv* env = attach();" + newLine);
 				output.write("  deleteLocalRef(env, localRef);" + newLine);
 				output.write("  return result;" + newLine);
 			}
