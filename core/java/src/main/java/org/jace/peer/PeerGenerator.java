@@ -78,10 +78,15 @@ public class PeerGenerator
 			throw new IOException("Failed to create " + actualDirectory);
 		if (lastModified > cppHeader.lastModified())
 		{
-			try (BufferedWriter out = new BufferedWriter(new FileWriter(cppHeader)))
+			BufferedWriter out = new BufferedWriter(new FileWriter(cppHeader));
+			try
 			{
 				generateCppPeerHeader(out);
 			}
+            finally {
+                if (out != null)
+                    out.close();
+            }
 		}
 
 		File cppMappings = new File(sourceDirectory, peerMetaClass.getSimpleName() + "Mappings.cpp");
@@ -90,10 +95,17 @@ public class PeerGenerator
 			throw new IOException("Failed to create " + actualDirectory);
 		if (lastModified > cppMappings.lastModified())
 		{
-			try (BufferedWriter out = new BufferedWriter(new FileWriter(cppMappings)))
+			BufferedWriter out = new BufferedWriter(new FileWriter(cppMappings));
+			try
 			{
 				generateCppPeerMappings(out);
 			}
+            finally
+            {
+                if (out != null) {
+                    out.close();
+                }
+            }
 		}
 
 		File cppSource = new File(sourceDirectory, peerMetaClass.getSimpleName() + "_peer.cpp");
@@ -102,10 +114,16 @@ public class PeerGenerator
 			throw new IOException("Failed to create " + actualDirectory);
 		if (lastModified > cppSource.lastModified())
 		{
-			try (BufferedWriter out = new BufferedWriter(new FileWriter(cppSource)))
+			BufferedWriter out = new BufferedWriter(new FileWriter(cppSource));
+			try
 			{
 				generateCppPeerSource(out);
 			}
+            finally
+            {
+                if (out != null)
+                    out.close();
+            }
 		}
 	}
 
@@ -322,6 +340,7 @@ public class PeerGenerator
 		output.write(newLine);
 
 		output.write(generator.getInitializerValue(true) + newLine);
+		generator.generateMethodIdArrayDefinition(output);
 		generator.generateMethodDefinitions(output, true);
 		generator.generateFieldDefinitions(output, true);
 		generator.generateJaceDefinitions(output, true);
@@ -536,7 +555,7 @@ public class PeerGenerator
 
 			output.write("extern \"C\" JNIEXPORT " + returnType.getJniType() + " JNICALL " + functionName);
 			output.write("(JNIEnv* env, ");
-			output.write(new DelimitedCollection<>(params).toString(", "));
+			output.write(new DelimitedCollection(params).toString(", "));
 			output.write(") { " + newLine);
 			output.write(newLine);
 

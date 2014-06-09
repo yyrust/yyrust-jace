@@ -68,10 +68,16 @@ public class ClassFile
 	 */
 	public ClassFile(File path) throws IOException, ClassFormatError
 	{
-		try (InputStream input = new BufferedInputStream(new FileInputStream(path)))
+		InputStream input = new BufferedInputStream(new FileInputStream(path));
+		try 
 		{
 			parseClass(input);
 		}
+        finally
+        {
+            if (input != null)
+                input.close();
+        }
 	}
 
 	/**
@@ -273,10 +279,16 @@ public class ClassFile
 	 */
 	public void writeClass(String path) throws IOException
 	{
-		try (OutputStream output = new BufferedOutputStream(new FileOutputStream(path)))
+		OutputStream output = new BufferedOutputStream(new FileOutputStream(path));
+		try
 		{
 			writeClass(output);
 		}
+        finally
+        {
+            if (output != null)
+                output.close();
+        }
 	}
 
 	/**
@@ -584,8 +596,8 @@ public class ClassFile
 	{
 		final int interfaceCount = input.readUnsignedShort();
 
-		interfaces = new ArrayList<>(interfaceCount);
-		interfaceIndices = new ArrayList<>(interfaceCount);
+		interfaces = new ArrayList(interfaceCount);
+		interfaceIndices = new ArrayList(interfaceCount);
 
 		for (int i = 0; i < interfaceCount; ++i)
 		{
@@ -633,7 +645,7 @@ public class ClassFile
 	{
 		final int attributeCount = input.readUnsignedShort();
 
-		attributes = new ArrayList<>(attributeCount);
+		attributes = new ArrayList(attributeCount);
 		AttributeFactory factory = new AttributeFactory();
 
 		for (int i = 0; i < attributeCount; ++i)
