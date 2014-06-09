@@ -346,7 +346,7 @@ public class ProxyGenerator
 			output.write("(");
 
 			List<TypeName> parameterTypes = method.getParameterTypes();
-			DelimitedCollection<TypeName> parameterList = new DelimitedCollection<>(parameterTypes);
+			DelimitedCollection<TypeName> parameterList = new DelimitedCollection(parameterTypes);
 			DelimitedCollection.Stringifier<TypeName> sf = new DelimitedCollection.Stringifier<TypeName>()
 			{
 				private int current = 0;
@@ -965,7 +965,7 @@ public class ProxyGenerator
 				"::") + "()");
 			if (forPeer)
 				constructors.add("::jace::Peer(jPeer)");
-			DelimitedCollection<String> delimited = new DelimitedCollection<>(constructors);
+			DelimitedCollection<String> delimited = new DelimitedCollection(constructors);
 
 			definition.append("#define ").append(initializerName);
 			if (!constructors.isEmpty())
@@ -1483,7 +1483,7 @@ public class ProxyGenerator
 		output.write("(");
 
 		List<TypeName> parameterTypes = method.getParameterTypes();
-		DelimitedCollection<TypeName> parameterList = new DelimitedCollection<>(parameterTypes);
+		DelimitedCollection<TypeName> parameterList = new DelimitedCollection(parameterTypes);
 		DelimitedCollection.Stringifier<TypeName> sf = new DelimitedCollection.Stringifier<TypeName>()
 		{
 			private int current = 0;
@@ -1515,7 +1515,7 @@ public class ProxyGenerator
 	 * @param output the output writer
 	 * @throws IOException if an error occurs while writing
 	 */
-	private void generateMethodIdArrayDefinition(Writer output) throws IOException
+	public void generateMethodIdArrayDefinition(Writer output) throws IOException
     {
         int methodCount = classFile.getMethods().size();
         if (methodCount > 0) {
@@ -2305,36 +2305,24 @@ public class ProxyGenerator
 		for (int i = 2; i < args.length; ++i)
 		{
 			String option = args[i];
-			switch (option)
-			{
-				case "-public":
-				{
-					accessibility = AccessibilityType.PUBLIC;
-					break;
-				}
-				case "-protected":
-				{
-					accessibility = AccessibilityType.PROTECTED;
-					break;
-				}
-				case "-package":
-				{
-					accessibility = AccessibilityType.PACKAGE;
-					break;
-				}
-				case "-private":
-				{
-					accessibility = AccessibilityType.PRIVATE;
-					break;
-				}
-				default:
-				{
-					System.out.println("Not an understood option: " + option);
-					System.out.println();
-					System.out.println(getUsage());
-					return;
-				}
-			}
+            if (option.equals("-public")) {
+                accessibility = AccessibilityType.PUBLIC;
+            }
+            else if (option.equals("-protected")) {
+                accessibility = AccessibilityType.PROTECTED;
+            }
+            else if (option.equals("-package")) {
+                accessibility = AccessibilityType.PROTECTED;
+            }
+            else if (option.equals("-private")) {
+                accessibility = AccessibilityType.PRIVATE;
+            }
+            else {
+                System.out.println("Not an understood option: " + option);
+                System.out.println();
+                System.out.println(getUsage());
+                return;
+            }
 		}
 
 		try
@@ -2343,18 +2331,11 @@ public class ProxyGenerator
 				"java.class.path")), new ClassFile(new File(args[0])), new AcceptAll()).
 				accessibility(accessibility).build();
 			OutputStreamWriter writer = new OutputStreamWriter(System.out);
-			switch (args[1])
-			{
-				case "header":
-				{
+            if (args[1].equals("header")) {
 					generator.generateHeader(writer);
-					break;
-				}
-				case "source":
-				{
-					generator.generateSource(writer);
-					break;
-				}
+            }
+            else if (args[1].equals("source")) {
+                generator.generateSource(writer);
 			}
 			writer.flush();
 		}

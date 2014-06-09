@@ -317,7 +317,8 @@ public class PeerEnhancer
 	 */
 	private void run() throws IOException
 	{
-		try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(inputFile)))
+		BufferedInputStream in = new BufferedInputStream(new FileInputStream(inputFile));
+		try
 		{
 			ClassNode classNode = new ClassNode();
 			ClassReader classReader = new ClassReader(in);
@@ -349,13 +350,22 @@ public class PeerEnhancer
 				return;
 			}
 
-			try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outputFile)))
+			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outputFile));
+			try
 			{
 				ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 				classNode.accept(classWriter);
 				out.write(classWriter.toByteArray());
 			}
+            finally {
+                if (out != null)
+                    out.close();
+            }
 		}
+        finally {
+            if (in != null)
+                in.close();
+        }
 	}
 
 	/**
@@ -838,24 +848,17 @@ public class PeerEnhancer
 		{
 			String option = args[i];
 			boolean matchFound = false;
-			switch (option)
-			{
-				case "-deallocator":
-				{
+            if (option.equals("-deallocator")) {
 					String[] tokens = args[i].split("=");
 					if (tokens.length == 2)
 					{
 						deallocationMethod = tokens[1];
 						matchFound = true;
 					}
-					break;
-				}
-				case "-verbose":
-				{
-					verbose = true;
-					matchFound = true;
-					break;
-				}
+            }
+            else if (option.equals("-verbose")) {
+                verbose = true;
+                matchFound = true;
 			}
 			if (!matchFound)
 			{
